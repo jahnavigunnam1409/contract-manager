@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contract Manager</title>
+  <style>
+    :root {
+      --page: #f6f7fc;
+      --card: #ffffff;
+      --text: #1d2740;
+      --muted: #687691;
+      --line: #e1e5ee;
+      --accent: #5a58dc;
+      --accent-dark: #28286d;
+      --accent-light: #eeedff;
+      --danger: #c9373d;
+      --draft: #8390a8;
+      --review: #df8a18;
+      --approved: #15965b;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--page);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    main { max-width: 1440px; margin: 0 auto; padding: 18px 32px 56px; }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 48px;
+      min-height: 345px;
+      padding: 42px 62px;
+      color: white;
+      border-radius: 0 0 46px 46px;
+      background: linear-gradient(112deg, #272766 0%, #5552c9 100%);
+      box-shadow: 0 22px 50px rgba(49, 47, 123, .15);
+    }
+    .hero-copy { max-width: 660px; }
+    .hero h1 { max-width: 510px; margin: 0; font-size: clamp(2.35rem, 3.8vw, 3.75rem); line-height: 1.04; letter-spacing: -.06em; }
+    .hero p { max-width: 630px; margin: 20px 0 0; color: #e7e7ff; font-size: clamp(1.05rem, 1.55vw, 1.4rem); line-height: 1.45; letter-spacing: -.025em; }
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(150px, 1fr)); gap: 24px; min-width: 415px; }
+    .stat { padding: 31px 29px; border: 2px solid rgba(255,255,255,.15); border-radius: 25px; background: rgba(29, 29, 103, .28); }
+    .stat strong { display: block; font-size: 2.8rem; line-height: 1; letter-spacing: -.05em; }
+    .stat span { display: block; margin-top: 14px; color: #e4e4ff; font-size: 1.05rem; font-weight: 650; }
+
+    .dashboard { display: grid; grid-template-columns: minmax(330px, .82fr) minmax(460px, 1.18fr); gap: 44px; margin-top: 50px; align-items: start; }
+    .card { overflow: hidden; border: 1px solid var(--line); border-radius: 32px; background: var(--card); box-shadow: 0 16px 42px rgba(41, 53, 83, .07); }
+    .upload-card { padding: 44px 42px; }
+    .card-title { margin: 0; font-size: 1.75rem; line-height: 1.15; letter-spacing: -.045em; }
+    .card-copy { margin: 14px 0 0; color: var(--muted); font-size: 1.15rem; line-height: 1.45; }
+    label { display: block; margin: 38px 0 12px; color: #45516a; font-size: 1.06rem; font-weight: 750; }
+    label span { color: #9aa5ba; font-weight: 600; }
+    input[type="text"] { width: 100%; padding: 17px 22px; border: 2px solid #dde2ed; border-radius: 17px; outline: none; color: var(--text); font-size: 1.15rem; transition: border-color .2s, box-shadow .2s; }
+    input[type="text"]::placeholder { color: #8993a7; }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(90, 88, 220, .12); }
+    input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .dropzone { display: grid; place-items: center; min-height: 164px; padding: 25px; border: 3px dashed #c8d1e3; border-radius: 22px; color: #687691; text-align: center; transition: .2s ease; cursor: pointer; }
+    .dropzone:hover, .dropzone.is-dragging { border-color: var(--accent); background: #f8f7ff; }
+    .dropzone strong, .dropzone span { display: block; }
+    .dropzone strong { font-size: 1.1rem; }
+    .dropzone span { margin-top: 13px; color: #3e4b68; font-size: 1.05rem; font-weight: 750; overflow-wrap: anywhere; }
+    .primary { width: 100%; margin-top: 46px; padding: 19px 22px; border: 0; border-radius: 16px; background: var(--accent); color: white; box-shadow: 0 12px 21px rgba(90, 88, 220, .23); font-size: 1.25rem; font-weight: 800; transition: transform .18s, background .18s; }
+    .primary:hover { background: #4d4bca; transform: translateY(-2px); }
+    button:disabled { cursor: not-allowed; opacity: .55; transform: none !important; }
+    .err { min-height: 20px; margin: 12px 0 0; color: var(--danger); font-size: .94rem; }
+
+    .contracts-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 44px 46px 32px; border-bottom: 1px solid var(--line); }
+    .count { flex: none; margin-top: 18px; padding: 9px 17px; border-radius: 999px; background: var(--accent-light); color: #514ebd; font-size: 1.1rem; font-weight: 800; }
+    .contract-list { max-height: 430px; padding: 18px 26px 28px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #c5c5ec transparent; }
+    .contract-list::-webkit-scrollbar { width: 8px; }
+    .contract-list::-webkit-scrollbar-thumb { border: 2px solid white; border-radius: 999px; background: #c5c5ec; }
+    .contract { display: grid; grid-template-columns: 47px minmax(0, 1fr) auto; align-items: center; gap: 14px; width: 100%; padding: 17px; border: 0; border-radius: 17px; background: transparent; color: inherit; text-align: left; transition: background .18s, transform .18s; }
+    .contract:hover { background: #f5f5ff; transform: translateX(3px); }
+    .doc-icon { display: grid; place-items: center; width: 47px; height: 47px; border-radius: 13px; background: #f0efff; color: #5652c9; font-size: 1.3rem; }
+    .contract-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; }
+    .contract-meta { margin-top: 5px; color: var(--muted); font-size: .9rem; }
+    .pill { display: inline-block; padding: 6px 10px; border-radius: 999px; color: white; font-size: .74rem; font-weight: 800; letter-spacing: .02em; }
+    .DRAFT { background: var(--draft); } .REVIEW { background: var(--review); } .APPROVED { background: var(--approved); }
+    .empty-state { display: grid; place-items: center; min-height: 285px; padding: 34px; text-align: center; }
+    .empty-icon { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 15px; border-radius: 18px; background: var(--accent-light); color: var(--accent); font-size: 1.45rem; }
+    .empty-state strong { font-size: 1.3rem; letter-spacing: -.03em; }
+    .empty-state p { margin: 8px 0 0; color: var(--muted); }
+    .hidden { display: none !important; }
+
+    .detail-card { margin-top: 34px; padding: 34px; }
+    .detail-top { display: flex; justify-content: space-between; gap: 18px; align-items: center; }
+    .detail-top h2 { margin: 0; font-size: 1.42rem; }
+    .download { color: var(--accent); font-weight: 750; text-decoration: none; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 24px 0 14px; }
+    .step { padding: 10px; border: 1px solid var(--line); border-radius: 11px; color: var(--muted); text-align: center; font-size: .84rem; font-weight: 750; }
+    .step.on { border-color: var(--accent); background: var(--accent); color: white; }
+    .secondary { padding: 11px 16px; border: 0; border-radius: 10px; background: var(--accent); color: white; font-weight: 750; }
+    .question-row { display: flex; gap: 10px; margin-top: 9px; }
+    .question-row input { flex: 1; }
+    .detail-card h3 { margin: 28px 0 8px; font-size: 1.08rem; }
+    #answer { color: #42506a; }
+    .match { margin: 8px 0; padding: 8px 10px; border-left: 3px solid var(--accent); background: #f8f8ff; font-size: .93rem; }
+    pre { max-height: 280px; margin: 0; padding: 15px; overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: #fafbfe; color: #48546d; font: .87rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
+
+    @media (max-width: 960px) { .hero { min-height: auto; padding: 40px 42px; } .stats { min-width: 330px; gap: 14px; } .stat { padding: 30px 22px; } .dashboard { grid-template-columns: 1fr; gap: 26px; } }
+    @media (max-width: 680px) { main { padding: 0 16px 36px; } .hero { display: block; padding: 36px 27px; border-radius: 0 0 30px 30px; } .hero p { margin-top: 18px; } .stats { min-width: 0; margin-top: 28px; grid-template-columns: repeat(2, 1fr); } .stat { padding: 23px 18px; border-radius: 20px; } .stat strong { font-size: 2.5rem; } .stat span { margin-top: 10px; font-size: 1rem; } .dashboard { margin-top: 28px; } .upload-card { padding: 30px 25px; } .contracts-head { padding: 30px 25px 24px; } .count { margin-top: 4px; } .card-title { font-size: 1.48rem; } .card-copy { font-size: 1.02rem; } label { margin-top: 28px; } .primary { margin-top: 30px; } .contract-list { max-height: 360px; padding: 12px 10px 18px; } .detail-card { padding: 25px; } .detail-top { align-items: flex-start; flex-direction: column; } .question-row { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <h1 id="page-title">Keep every contract moving.</h1>
+        <p>Store agreements in one calm workspace, review them with confidence, and quickly find the details that matter.</p>
+      </div>
+      <div class="stats" aria-label="Contract statistics">
+        <div class="stat"><strong id="contractCount">0</strong><span>Contracts</span></div>
+        <div class="stat"><strong id="approvedCount">0</strong><span>Approved</span></div>
+      </div>
+    </section>
+
+    <section class="dashboard" aria-label="Contract workspace">
+      <section class="card upload-card" aria-labelledby="upload-title">
+        <h2 class="card-title" id="upload-title">Add a contract</h2>
+        <p class="card-copy">PDF, DOC, or DOCX up to 10 MB.</p>
+        <label for="title">Contract name <span>(optional)</span></label>
+        <input type="text" id="title" placeholder="e.g. Design services agreement">
+        <label for="file">Document</label>
+        <input type="file" id="file" accept=".pdf,.doc,.docx">
+        <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Choose a contract document">
+          <div><strong>Choose a file or drop it here</strong><span id="fileName">No file selected</span></div>
+        </div>
+        <button class="primary" id="upload">Upload contract</button>
+        <div class="err" id="uploadErr" role="alert"></div>
+      </section>
+
+      <section class="card" aria-labelledby="contracts-title">
+        <div class="contracts-head">
+          <div><h2 class="card-title" id="contracts-title">Your contracts</h2><p class="card-copy">Choose a contract to view its details.</p></div>
+          <span class="count" id="listCount">0 total</span>
+        </div>
+        <div class="contract-list" id="rows"></div>
+        <div class="empty-state" id="empty"><div><div class="empty-icon">⌁</div><strong>No contracts yet</strong><p>Upload your first agreement to get started.</p></div></div>
+      </section>
+    </section>
+
+    <section class="card detail-card hidden" id="detail" aria-live="polite">
+      <div class="detail-top"><h2 id="dTitle"></h2><a id="dDownload" class="download" href="#">Download original</a></div>
+      <div class="steps" id="steps"></div>
+      <button class="secondary" id="advance">Advance status</button><span class="err" id="statusErr"></span>
+      <h3>Ask a question</h3>
+      <div class="question-row"><input type="text" id="question" placeholder="e.g. What is the payment term?"><button class="secondary" id="ask">Ask</button></div>
+      <div id="answer"></div>
+      <h3>Parsed text</h3><pre id="text"></pre>
+    </section>
+  </main>
+
+  <script>
+    const API = '/api/contracts';
+    const ORDER = ['DRAFT', 'REVIEW', 'APPROVED'];
+    let current = null;
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    async function api(url, opts) {
+      const response = await fetch(url, opts);
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.message || ('Request failed (' + response.status + ')'));
+      return body;
+    }
+
+    function updateFileName() { $('fileName').textContent = $('file').files[0]?.name || 'No file selected'; }
+
+    async function loadList() {
+      const items = await api(API);
+      $('contractCount').textContent = items.length;
+      $('approvedCount').textContent = items.filter(contract => contract.status === 'APPROVED').length;
+      $('listCount').textContent = items.length + (items.length === 1 ? ' total' : ' total');
+      $('empty').classList.toggle('hidden', items.length > 0);
+      $('rows').innerHTML = items.map(contract => `
+        <button class="contract" data-id="${contract.id}" type="button">
+          <span class="doc-icon" aria-hidden="true">▤</span>
+          <span><span class="contract-name">${esc(contract.title)}</span><span class="contract-meta">${esc(contract.fileType)} · ${contract.wordCount} words</span></span>
+          <span class="pill ${contract.status}">${contract.status}</span>
+        </button>`).join('');
+      document.querySelectorAll('.contract').forEach(button => button.onclick = () => openContract(button.dataset.id));
+    }
+
+    async function openContract(id) {
+      current = await api(API + '/' + id);
+      $('detail').classList.remove('hidden');
+      $('dTitle').textContent = '#' + current.id + ' · ' + current.title;
+      $('dDownload').href = API + '/' + id + '/download';
+      $('text').textContent = current.extractedText || '(no readable text)';
+      $('answer').innerHTML = ''; $('statusErr').textContent = '';
+      renderSteps();
+      $('detail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function renderSteps() {
+      const index = ORDER.indexOf(current.status);
+      $('steps').innerHTML = ORDER.map((status, position) => `<div class="step ${position <= index ? 'on' : ''}">${status}</div>`).join('');
+      const next = ORDER[index + 1];
+      $('advance').disabled = !next;
+      $('advance').textContent = next ? 'Move to ' + next : 'Approved (final)';
+    }
+
+    $('dropzone').onclick = () => $('file').click();
+    $('dropzone').onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); $('file').click(); } };
+    $('file').onchange = updateFileName;
+    ['dragenter', 'dragover'].forEach(type => $('dropzone').addEventListener(type, event => { event.preventDefault(); $('dropzone').classList.add('is-dragging'); }));
+    ['dragleave', 'drop'].forEach(type => $('dropzone').addEventListener(type, event => { event.preventDefault(); $('dropzone').classList.remove('is-dragging'); }));
+    $('dropzone').addEventListener('drop', event => { if (event.dataTransfer.files.length) { $('file').files = event.dataTransfer.files; updateFileName(); } });
+
+    $('upload').onclick = async () => {
+      $('uploadErr').textContent = '';
+      const file = $('file').files[0];
+      if (!file) { $('uploadErr').textContent = 'Choose a PDF or Word file first.'; return; }
+      const formData = new FormData(); formData.append('file', file);
+      if ($('title').value.trim()) formData.append('title', $('title').value.trim());
+      try {
+        const contract = await api(API, { method: 'POST', body: formData });
+        $('title').value = ''; $('file').value = ''; updateFileName();
+        await loadList(); await openContract(contract.id);
+      } catch (error) { $('uploadErr').textContent = error.message; }
+    };
+
+    $('advance').onclick = async () => {
+      const next = ORDER[ORDER.indexOf(current.status) + 1];
+      try {
+        await api(API + '/' + current.id + '/status', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: next }) });
+        await loadList(); await openContract(current.id);
+      } catch (error) { $('statusErr').textContent = error.message; }
+    };
+
+    $('ask').onclick = async () => {
+      const question = $('question').value.trim(); if (!question) return;
+      try {
+        const answer = await api(API + '/' + current.id + '/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }) });
+        $('answer').innerHTML = `<p><strong>${esc(answer.answer)}</strong></p>` + (answer.matches.length > 1 ? '<p class="card-copy">Other relevant passages:</p>' + answer.matches.slice(1).map(match => `<div class="match">${esc(match.text)}</div>`).join('') : '');
+      } catch (error) { $('answer').innerHTML = `<div class="err">${esc(error.message)}</div>`; }
+    };
+    $('question').addEventListener('keydown', event => { if (event.key === 'Enter') $('ask').click(); });
+    loadList().catch(error => { $('empty').innerHTML = `<div><strong>Couldn’t load contracts</strong><p>${esc(error.message)}</p></div>`; });
+  </script>
+</body>
+</html>

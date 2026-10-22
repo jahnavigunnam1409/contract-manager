@@ -1,0 +1,9 @@
+# Local contract data and uploaded documents
+/uploads/
+/data/
+
+# Build and editor files
+/target/
+/.idea/
+*.iml
+.DS_Store
