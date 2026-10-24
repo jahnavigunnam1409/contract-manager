@@ -94,6 +94,14 @@ public class ContractService {
         }
     }
 
+    /** Deletes one contract: its database record and its stored file. */
+    @Transactional
+    public void delete(Long id) {
+        Contract c = get(id);
+        repo.delete(c);
+        storage.delete(c.getStoragePath());
+    }
+
     private String stripExtension(String name) {
         int i = name.lastIndexOf('.');
         return i > 0 ? name.substring(0, i) : name;
