@@ -99,6 +99,10 @@
     .step { padding: 10px; border: 1px solid var(--line); border-radius: 11px; color: var(--muted); text-align: center; font-size: .84rem; font-weight: 750; }
     .step.on { border-color: var(--accent); background: var(--accent); color: white; }
     .secondary { padding: 11px 16px; border: 0; border-radius: 10px; background: var(--accent); color: white; font-weight: 750; }
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .actions .err { margin: 0; min-height: 0; }
+    .danger { padding: 11px 16px; border: 1px solid var(--danger); border-radius: 10px; background: transparent; color: var(--danger); font-weight: 750; transition: background .18s, color .18s; }
+    .danger:hover { background: var(--danger); color: white; }
     .question-row { display: flex; gap: 10px; margin-top: 9px; }
     .question-row input { flex: 1; }
     .detail-card h3 { margin: 28px 0 8px; font-size: 1.08rem; }
@@ -151,7 +155,11 @@
     <section class="card detail-card hidden" id="detail" aria-live="polite">
       <div class="detail-top"><h2 id="dTitle"></h2><a id="dDownload" class="download" href="#">Download original</a></div>
       <div class="steps" id="steps"></div>
-      <button class="secondary" id="advance">Advance status</button><span class="err" id="statusErr"></span>
+      <div class="actions">
+        <button class="secondary" id="advance">Advance status</button>
+        <button class="danger" id="delete">Delete contract</button>
+        <span class="err" id="statusErr"></span>
+      </div>
       <h3>Ask a question</h3>
       <div class="question-row"><input type="text" id="question" placeholder="e.g. What is the payment term?"><button class="secondary" id="ask">Ask</button></div>
       <div id="answer"></div>
@@ -234,6 +242,17 @@
       try {
         await api(API + '/' + current.id + '/status', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: next }) });
         await loadList(); await openContract(current.id);
+      } catch (error) { $('statusErr').textContent = error.message; }
+    };
+
+    $('delete').onclick = async () => {
+      if (!current) return;
+      if (!confirm('Delete "' + current.title + '"? This cannot be undone.')) return;
+      try {
+        await api(API + '/' + current.id, { method: 'DELETE' });
+        current = null;
+        $('detail').classList.add('hidden');
+        await loadList();
       } catch (error) { $('statusErr').textContent = error.message; }
     };
 
