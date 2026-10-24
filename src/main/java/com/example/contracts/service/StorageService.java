@@ -28,4 +28,13 @@ public class StorageService {
     public byte[] load(String storagePath) throws IOException {
         return Files.readAllBytes(Path.of(storagePath));
     }
+
+    /** Removes a stored file. Does nothing if the file is already gone. */
+    public void delete(String storagePath) {
+        try {
+            Files.deleteIfExists(Path.of(storagePath));
+        } catch (IOException ignored) {
+            // file already gone or not removable; the database record is deleted regardless
+        }
+    }
 }
