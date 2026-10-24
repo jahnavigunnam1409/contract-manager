@@ -69,4 +69,11 @@ public class ContractController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(service.original(c));
     }
+
+    /** Delete one contract and its stored file. */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }
